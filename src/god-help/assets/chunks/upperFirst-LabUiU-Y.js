@@ -1,0 +1,1 @@
+import{b5 as s,b6 as c,b7 as i,b8 as n}from"../entries/pages_catch-all.DeNA4nR9.js";function u(e){return function(r){r=s(r);var a=c(r)?i(r):void 0,t=a?a[0]:r.charAt(0),o=a?n(a,1).join(""):r.slice(1);return t[e]()+o}}var b=u("toUpperCase");export{b as u};

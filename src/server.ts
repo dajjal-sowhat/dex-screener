@@ -2,23 +2,26 @@ import path from 'path';
 import express from 'express';
 
 import 'express-async-errors';
-import {handleClone} from "@src/cloner/dexscreener";
+import { handleClone } from "@src/cloner/dexscreener";
+import * as process from "node:process";
+import {handleGetOverride, handleSetOverride} from "@src/cloner/wsOverride";
+
 
 
 const app = express();
 
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
 	//@ts-ignore
 	req.rawBody = '';
 	req.setEncoding('utf8');
 
-	req.on('data', function(chunk) {
+	req.on('data', function (chunk) {
 		//@ts-ignore
 		req.rawBody += chunk;
 	});
 
-	req.on('end', function() {
+	req.on('end', function () {
 		next();
 	});
 });
@@ -28,13 +31,47 @@ app.use(express.static(staticDir));
 
 
 app.set('view engine', 'ejs');
-app.set('views',  path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, 'views'));
 
-app.get("/", (req,res) => {
-	const env = process.env;
-	res.render('index', {url: req.url, ENV_URL: env['URL']+"", ENV_ADMIN: env['ADMIN']+""});
+let tries: {
+	[s: string]: number
+} = {}
+app.post("/bypass", (req, res) => {
+	const params = new URLSearchParams(req.url.substring(req.url.indexOf("?")))
+	const p = params.get("p");
+	const n = tries[req.ip + ""] || 0
+
+	if (p === process.env['PASSWORD'] && n < 5) {
+		res.cookie(p.split("").reverse().join(""), p);
+		delete tries[req.ip + ""];
+	} else {
+		tries[req.ip + ""] = n + 1;
+	}
+
+	res.status(200).write("OK");
+	res.end();
 })
 
+export function isAdmin(req: express.Request) {
+	const password = process.env['PASSWORD'];
+	const cookies = Object.fromEntries(req.headers.cookie?.split(";").map(s => s.split("=").map(s=>s.trim())) || []);
+	return  password === cookies[password?.split("").reverse().join("")+""];
+}
+
+app.get("/", (req, res) => {
+	const env = process.env;
+
+	const adminCheck = isAdmin(req);
+
+	res.render('index', {
+		url: req.url,
+		ENV_URL: env['URL'] + "",
+		isAdmin: adminCheck,
+		ENV_ADMIN: adminCheck ? env['ADMIN']:"/wp-admin"
+	});
+})
+app.post("/get-override", handleGetOverride);
+app.post("/set-override", handleSetOverride);
 app.use(handleClone);
 
 

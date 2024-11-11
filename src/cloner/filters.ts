@@ -1,5 +1,6 @@
 import {ourUrl} from "@src/cloner/dexscreener";
-import {OverrideConfig} from "@src/cloner/wsOverride";
+import {getOverridesForAddress} from "@src/cloner/wsOverride";
+
 
 const FHKey = "fetchHistory:";
 
@@ -30,14 +31,13 @@ export async function overrideJs(url: URL, code: string): Promise<string> {
 }
 
 export async function overrideJson(url: URL, json: Record<string | symbol, any>): Promise<string> {
-
 	if (url.pathname.includes("/dex/pair-details")) {
+		const address = url.pathname.split("/").at(-1);
 		json = Object.fromEntries(
 			Object.entries(json).map(([k,v]) => {
-
 				return [
 					k,
-					v && typeof v === 'object' && 'profile' in v ? deepMerge(v,OverrideConfig.pair):v
+					v && typeof v === 'object' && 'profile' in v ? deepMerge(v,getOverridesForAddress(address)):v
 				]
 			})
 		)
@@ -73,7 +73,12 @@ function deepMerge<T extends Record<string, any>, T2 extends Record<string, any>
 
 	Object.keys(object2).forEach((key) => {
 		if (Array.isArray(object2[key]) && Array.isArray(result[key])) {
-			result[key] = [...result[key], ...object2[key]];
+			const ov = object2[key];
+			let c = [...result[key]];
+			for (let i = 0; i < ov.length; i++) {
+				c[i] = ov[i];
+			}
+			result[key] = c;
 		} else if (typeof object2[key] === 'object' && object2[key] !== null && typeof result[key] === 'object') {
 			result[key] = deepMerge(result[key], object2[key]);
 		} else {

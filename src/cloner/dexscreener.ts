@@ -19,7 +19,7 @@ export async function handleFromFetch(req: Request, res: Response, domain = DEXS
 		fromCache = false;
 	}
 
-	console.log(`DOWNLOADING (${_try}): ${url}`);
+	console.log(`${req.method} (${_try}): ${url}`);
 
 	// Copy and filter headers to mimic a browser
 	let headers: Partial<any> = Object.fromEntries(

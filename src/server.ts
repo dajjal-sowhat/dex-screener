@@ -67,20 +67,26 @@ function render(req: express.Request, res: express.Response, route: any = {}) {
 		ENV_URL: env['URL'] + "",
 		isAdmin: adminCheck,
 		ENV_ADMIN: adminCheck ? env['ADMIN'] : "/wp-admin",
-		route: {
-			empty: true
-		}
+		route: typeof route === 'object' ? route || {e: true}:{e: true}
 	});
 }
 app.get("/", render);
-app.get("/:chain/:pair", (req,res)=>{
-	const route = CachedPairs[req.params.pair];
-	if (!route) {
+app.get("/:platformId/:pairAddress", (req,res)=>{
+	const pair = CachedPairs[req.params.pairAddress];
+	if (!pair) {
 		res.redirect("/");
 		res.end();
 		return;
 	}
-	route.id = "pairDetail"
+
+	const route = {
+		...req.params,
+		id: "pairDetail",
+		data: {
+			pair: pair
+		}
+	};
+
 	render(req,res,  route);
 })
 

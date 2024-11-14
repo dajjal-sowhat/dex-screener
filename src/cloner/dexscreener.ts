@@ -49,19 +49,20 @@ export async function handleFromFetch(req: Request, res: Response, domain = DEXS
 		let actualSource = Buffer.from(buffer);
 
 		const type = sourceHeaders['content-type'] || "";
-
+		const str = actualSource.toString('utf8');
 		if (type.includes("javascript") || type.includes("html")) {
-			const str = actualSource.toString('utf8');
 			const final = await overrideJs(url,str);
-
 			actualSource = Buffer.from(final);
 		} else if (type.includes('application/json')) {
 			try {
-				const str = actualSource.toString('utf8');
 				actualSource = Buffer.from(
 					await overrideJson(url, JSON.parse(str))
 				);
 			} catch {}
+		}
+
+		if (actualSource.toString('utf8').includes("localhost")) {
+			console.log(`INCLUDES ${req.method} ${url.toString()}`)
 		}
 
 		sourceHeaders['content-length'] = actualSource.length+"";

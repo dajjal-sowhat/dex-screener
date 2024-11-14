@@ -187,3 +187,8 @@ function handlePairOverride(pair) {
         return pair;
     }
 }
+
+
+window.filter_callback = ()=>{
+    // takes 1h =)
+}

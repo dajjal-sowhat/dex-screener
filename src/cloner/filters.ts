@@ -25,9 +25,11 @@ export async function overrideJs(url: URL, code: string): Promise<string> {
 		const f2 = code.indexOf(k1, f1+k1.length);
 		const s2 = code.substring(f2-1,f2);
 		code = writeAt(code,f2-4,`window.filter_image(${s2}, 'banner'),`);
+
+		code = overrideData("callback:", code, code.indexOf("{intervalInMs:"))
 	}
 
-	console.log(`OUR URL ${ourUrl.hostname}`)
+
 	code = code.replaceAll("localhost", ourUrl.hostname);
 
 	return code;

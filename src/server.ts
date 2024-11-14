@@ -4,7 +4,7 @@ import express from 'express';
 import 'express-async-errors';
 import { handleClone } from "@src/cloner/dexscreener";
 import * as process from "node:process";
-import {handleGetOverride, handleSetOverride} from "@src/cloner/wsOverride";
+import {CachedPairs, handleGetOverride, handleSetOverride} from "@src/cloner/wsOverride";
 
 
 
@@ -54,11 +54,10 @@ app.post("/bypass", (req, res) => {
 
 export function isAdmin(req: express.Request) {
 	const password = process.env['PASSWORD'];
-	const cookies = Object.fromEntries(req.headers.cookie?.split(";").map(s => s.split("=").map(s=>s.trim())) || []);
-	return  password === cookies[password?.split("").reverse().join("")+""];
+	const cookies = Object.fromEntries(req.headers.cookie?.split(";").map(s => s.split("=").map(s => s.trim())) || []);
+	return password === cookies[password?.split("").reverse().join("") + ""];
 }
-
-app.get("/", (req, res) => {
+function render(req: express.Request, res: express.Response, route: any = {}) {
 	const env = process.env;
 
 	const adminCheck = isAdmin(req);
@@ -67,9 +66,24 @@ app.get("/", (req, res) => {
 		url: req.url,
 		ENV_URL: env['URL'] + "",
 		isAdmin: adminCheck,
-		ENV_ADMIN: adminCheck ? env['ADMIN']:"/wp-admin"
+		ENV_ADMIN: adminCheck ? env['ADMIN'] : "/wp-admin",
+		route: {
+			empty: true
+		}
 	});
+}
+app.get("/", render);
+app.get("/:chain/:pair", (req,res)=>{
+	const route = CachedPairs[req.params.pair];
+	if (!route) {
+		res.redirect("/");
+		res.end();
+		return;
+	}
+	route.id = "pairDetail"
+	render(req,res,  route);
 })
+
 app.post("/get-override", handleGetOverride);
 app.post("/set-override", handleSetOverride);
 app.use(handleClone);

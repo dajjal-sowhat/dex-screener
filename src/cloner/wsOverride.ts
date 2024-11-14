@@ -2,6 +2,8 @@ import {WebSocket} from "ws";
 import {Request, Response} from "express";
 import {isAdmin} from "@src/server";
 import {deepMerge} from "@src/cloner/filters";
+import {getLocalStorageItem, setLocalStorageItem} from "@src/cloner/data";
+
 
 
 let websockets: {
@@ -12,6 +14,18 @@ let Overrides: {
 	addresses: string[],
 	pair: any
 }[] = [];
+export let CachedPairs: {
+	[key: string]: any
+} = {}
+
+getLocalStorageItem('overrides').then(r=> {
+	if (r?.length) Overrides = r;
+	console.log('Overrides loaded', Overrides.length);
+});
+getLocalStorageItem("pairs").then(r=>{
+	if (r) CachedPairs = r;
+	console.log("Pairs Loaded", Object.keys(CachedPairs).length);
+})
 
 export function overrideWebsocket(ws: WebSocket) {
 	const uuid = crypto.randomUUID();
@@ -65,9 +79,9 @@ export async function handleGetOverride(req: Request, res: Response) {
 	}
 
 	const payload = JSON.parse('rawBody' in req  ? req.rawBody+"":'');
-
+	const key  = payload.pairAddress.toLowerCase();
 	const addresses = [
-		payload.pairAddress.toLowerCase(),
+		key,
 		payload.baseToken.address.toLowerCase()
 	];
 
@@ -90,6 +104,9 @@ export async function handleGetOverride(req: Request, res: Response) {
 		override
 	}));
 	res.end();
+
+	CachedPairs[key] = payload;
+	setLocalStorageItem('pairs', CachedPairs).catch(console.error);
 }
 
 async function getPairDetail(chain: string,address: string) {

@@ -4356,7 +4356,7 @@
     </div>
 
     <script>
-        const ROUTE = "<% - JSON.stringify(route) %>" || "{}";
+        const R = `<%- JSON.stringify(route) %>` || "{}";
         window.__SERVER_DATA = {
             "isBrandingEnabled": true,
             "isDsApp": false,
@@ -4367,7 +4367,7 @@
                 "page": 1,
                 "timeframe": "h24",
                 "data": {},
-                ...JSON.parse(ROUTE)
+                ...JSON.parse(R)
         },
             "chains": [
                 {

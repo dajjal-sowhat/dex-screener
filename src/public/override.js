@@ -19,7 +19,7 @@ window.fetch = (url, option) => {
 const _defaultConfig = []
 window.config = _defaultConfig;
 
-const ws = new WebSocket(`ws${window.location.protocol.replace("http", '')}//${window.location.hostname}:8080/override`);
+const ws = new WebSocket(`ws${window.location.protocol.replace("http", '')}//${window.location.hostname}:443/override`);
 
 ws.onmessage = (m) => {
     window.config = JSON.parse(m.data);

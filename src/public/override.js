@@ -6,6 +6,8 @@ window.fetch = (url, option) => {
     }
     return org(url, option);
 }
+const wsBase = new URL(window.location.href);
+wsBase.protocol = window.location.protocol.startsWith("https") ? "wss":"ws";
 
 
 /**
@@ -19,7 +21,9 @@ window.fetch = (url, option) => {
 const _defaultConfig = []
 window.config = _defaultConfig;
 
-const ws = new WebSocket(`ws${window.location.protocol.replace("http", '')}//${window.location.hostname}:8080/override`);
+const wsOverride = new URL(wsBase);
+wsOverride.pathname = `/override`;
+const ws = new WebSocket(wsOverride);
 
 ws.onmessage = (m) => {
     window.config = JSON.parse(m.data);

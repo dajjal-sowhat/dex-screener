@@ -102,13 +102,18 @@ app.get("/:platformId/:pairAddress", async (req,res)=>{
 		}
 	}
 
-	const pairDetails = await handleDetailFetch().catch((e)=>{
+	let pairDetails = await handleDetailFetch().catch((e)=>{
 		res.write("FAIL");
 		res.end();
 		throw(e);
 	});
 
 	const override = getOverridesForAddress(req.params.pairAddress);
+
+	for (let key in pairDetails) {
+		pairDetails[key] =  deepMerge(pairDetails[key],override )
+	}
+
 	const route = {
 		...req.params,
 		id: "pairDetail",
@@ -117,7 +122,7 @@ app.get("/:platformId/:pairAddress", async (req,res)=>{
 				"schemaVersion": "1.3.0",
 				pair: deepMerge(pair, override)
 			},
-			pairDetails: deepMerge(pairDetails,override )
+			pairDetails
 		}
 	};
 

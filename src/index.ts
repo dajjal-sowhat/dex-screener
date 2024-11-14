@@ -15,7 +15,7 @@ const SERVER_START_MSG = ('Express server started on port: ' +
 server.listen(EnvVars.Port, () => logger.info(SERVER_START_MSG));
 
 const wsServer = new w.WebSocketServer({
-	port: 2083
+	port: 8080
 });
 
 wsServer.on('connection', (connection,req) => {

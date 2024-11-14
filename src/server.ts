@@ -2,7 +2,7 @@ import path from 'path';
 import express from 'express';
 
 import 'express-async-errors';
-import { handleClone } from "@src/cloner/dexscreener";
+import {handleClone, handleFromFetch} from "@src/cloner/dexscreener";
 import * as process from "node:process";
 import {CachedPairs, handleGetOverride, handleSetOverride} from "@src/cloner/wsOverride";
 
@@ -71,7 +71,7 @@ function render(req: express.Request, res: express.Response, route: any = {}) {
 	});
 }
 app.get("/", render);
-app.get("/:platformId/:pairAddress", (req,res)=>{
+app.get("/:platformId/:pairAddress", async (req,res)=>{
 	const pair = CachedPairs[req.params.pairAddress];
 	if (!pair) {
 		res.redirect("/");
@@ -79,11 +79,36 @@ app.get("/:platformId/:pairAddress", (req,res)=>{
 		return;
 	}
 
+	async function handleDetailFetch(n = 0) {
+		if (n > 5) throw("FAIL");
+		try {
+			return await fetch(`https://io.dexscreener.com/dex/pair-details/v3/${req.params.platformId}/${req.params.pairAddress}`, {
+				headers: {
+					'origin': "https://dexscreener.com",
+					'user-agent': `PhpClient/${crypto.randomUUID()}`
+				}
+			}).then(o=>o.json())
+		} catch (e) {
+			console.error(e);
+			return await handleDetailFetch(n+1);
+		}
+	}
+
+	const pairDetails = await handleDetailFetch().catch((e)=>{
+		res.write("FAIL");
+		res.end();
+		throw(e);
+	});
+
 	const route = {
 		...req.params,
 		id: "pairDetail",
 		data: {
-			pair: pair
+			pair: {
+				"schemaVersion": "1.3.0",
+				pair
+			},
+			pairDetails
 		}
 	};
 

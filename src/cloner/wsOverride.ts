@@ -53,6 +53,8 @@ export async function updateOverrides(func: ((overrides: typeof Overrides) => ty
 			ws.send(JSON.stringify(Overrides));
 		} catch {}
 	});
+
+	setLocalStorageItem("overrides", Overrides).catch(console.error);
 }
 
 export function getOverridesForAddress(address: (string | undefined) | string[],index = false) {
@@ -105,8 +107,14 @@ export async function handleGetOverride(req: Request, res: Response) {
 	}));
 	res.end();
 
-	CachedPairs[key] = payload;
-	setLocalStorageItem('pairs', CachedPairs).catch(console.error);
+	setCachedPair(key, payload).catch(console.error);
+}
+
+export async function setCachedPair(key: string, payload: any) {
+	if (!payload) {
+		delete CachedPairs[key];
+	} else CachedPairs[key] = payload;
+	return await setLocalStorageItem('pairs', CachedPairs).catch(console.error);
 }
 
 async function getPairDetail(chain: string,address: string) {

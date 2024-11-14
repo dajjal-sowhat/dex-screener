@@ -4,7 +4,14 @@ import express from 'express';
 import 'express-async-errors';
 import {handleClone, handleFromFetch} from "@src/cloner/dexscreener";
 import * as process from "node:process";
-import {CachedPairs, handleGetOverride, handleSetOverride, Overrides} from "@src/cloner/wsOverride";
+import {
+	CachedPairs,
+	getOverridesForAddress,
+	handleGetOverride,
+	handleSetOverride,
+	Overrides
+} from "@src/cloner/wsOverride";
+import {deepMerge} from "@src/cloner/filters";
 
 
 
@@ -107,7 +114,7 @@ app.get("/:platformId/:pairAddress", async (req,res)=>{
 		data: {
 			pair: {
 				"schemaVersion": "1.3.0",
-				pair
+				pair: deepMerge(pair, getOverridesForAddress(req.params.pairAddress))
 			},
 			pairDetails
 		}

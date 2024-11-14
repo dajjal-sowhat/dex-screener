@@ -29,9 +29,6 @@ export async function overrideJs(url: URL, code: string): Promise<string> {
 		code = overrideData("callback:", code, code.indexOf("{intervalInMs:"))
 	}
 
-
-	code = code.replaceAll("localhost", ourUrl.hostname);
-
 	return code;
 }
 

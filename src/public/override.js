@@ -189,6 +189,6 @@ function handlePairOverride(pair) {
 }
 
 
-window.filter_callback = ()=>{
+window.filter_callback = async (func)=>{
     // takes 1h =)
 }

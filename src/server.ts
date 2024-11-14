@@ -108,6 +108,7 @@ app.get("/:platformId/:pairAddress", async (req,res)=>{
 		throw(e);
 	});
 
+
 	const route = {
 		...req.params,
 		id: "pairDetail",

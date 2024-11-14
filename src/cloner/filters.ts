@@ -5,7 +5,7 @@ import {getOverridesForAddress} from "@src/cloner/wsOverride";
 const FHKey = "fetchHistory:";
 
 export async function overrideJs(url: URL, code: string): Promise<string> {
-	code = code.replaceAll("wss://io.dexscreener.com", `ws${ourUrl.protocol.replace("http","")}//${ourUrl.hostname}:443`)
+	code = code.replaceAll("wss://io.dexscreener.com", `ws${ourUrl.protocol.replace("http","")}//${ourUrl.hostname}:8080`)
 
 	if (code.includes(FHKey)) {
 		code = overrideData(FHKey,code);

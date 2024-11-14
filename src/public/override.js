@@ -18,7 +18,7 @@ wsBase.protocol = window.location.protocol.startsWith("https") ? "wss":"ws";
  * }[]}
  * @private
  */
-const _defaultConfig = []
+const _defaultConfig = typeof _INIT_OVERRIDES !== 'undefined' ? _INIT_OVERRIDES || []:[];
 window.config = _defaultConfig;
 
 const wsOverride = new URL(wsBase);

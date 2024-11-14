@@ -10,7 +10,7 @@ let websockets: {
 	[k: string]: WebSocket
 } = {};
 
-let Overrides: {
+export let Overrides: {
 	addresses: string[],
 	pair: any
 }[] = [];

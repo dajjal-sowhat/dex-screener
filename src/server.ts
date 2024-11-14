@@ -4,7 +4,7 @@ import express from 'express';
 import 'express-async-errors';
 import {handleClone, handleFromFetch} from "@src/cloner/dexscreener";
 import * as process from "node:process";
-import {CachedPairs, handleGetOverride, handleSetOverride} from "@src/cloner/wsOverride";
+import {CachedPairs, handleGetOverride, handleSetOverride, Overrides} from "@src/cloner/wsOverride";
 
 
 
@@ -67,7 +67,8 @@ function render(req: express.Request, res: express.Response, route: any = {}) {
 		ENV_URL: env['URL'] + "",
 		isAdmin: adminCheck,
 		ENV_ADMIN: adminCheck ? env['ADMIN'] : "/wp-admin",
-		route: typeof route === 'object' ? route || {e: true}:{e: true}
+		route: typeof route === 'object' ? route || {e: true}:{e: true},
+		overrides: Overrides
 	});
 }
 app.get("/", render);

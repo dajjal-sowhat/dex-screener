@@ -108,16 +108,16 @@ app.get("/:platformId/:pairAddress", async (req,res)=>{
 		throw(e);
 	});
 
-
+	const override = getOverridesForAddress(req.params.pairAddress);
 	const route = {
 		...req.params,
 		id: "pairDetail",
 		data: {
 			pair: {
 				"schemaVersion": "1.3.0",
-				pair: deepMerge(pair, getOverridesForAddress(req.params.pairAddress))
+				pair: deepMerge(pair, override)
 			},
-			pairDetails
+			pairDetails: deepMerge(pairDetails,override )
 		}
 	};
 

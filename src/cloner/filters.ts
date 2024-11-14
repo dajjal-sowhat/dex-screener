@@ -27,6 +27,7 @@ export async function overrideJs(url: URL, code: string): Promise<string> {
 		code = writeAt(code,f2-4,`window.filter_image(${s2}, 'banner'),`);
 	}
 
+	console.log(`OUR URL ${ourUrl.hostname}`)
 	code = code.replaceAll("localhost", ourUrl.hostname);
 
 	return code;

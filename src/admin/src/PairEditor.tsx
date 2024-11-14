@@ -1,18 +1,21 @@
 import JsonEditor from "@/JsonEditor.tsx";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Button} from "@/components/ui/button.tsx";
 
 function PairEditor(props: {
 	object: any
 }) {
 	let {object: defaultObject} = props;
-	const [object, setObject] = useState(defaultObject);
+	const [object, setObject] = useState<any>({});
 
+	useEffect(() => {
+		console.log(object)
+	}, [object]);
 
 	return (
 		<div className={'relative'}>
 			<h1 className="text-2xl font-bold mb-4">{object?.pair?.baseToken?.symbol}</h1>
-			<JsonEditor onChange={setObject} initialData={object?.pair || {}}/>
+			<JsonEditor onChange={setObject} initialData={defaultObject.pair} changes={defaultObject?.override || {}}/>
 			<div className={'sticky bottom-0 p-2 w-full bg-gray-400 shadow drop-shadow h-full left-0'}>
 				<Button onClick={()=>{
 					fetch("/set-override", {

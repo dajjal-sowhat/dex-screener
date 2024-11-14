@@ -5,7 +5,7 @@ import {getOverridesForAddress} from "@src/cloner/wsOverride";
 const FHKey = "fetchHistory:";
 
 export async function overrideJs(url: URL, code: string): Promise<string> {
-	code = code.replaceAll("wss://io.dexscreener.com", `ws${ourUrl.protocol.replace("http","")}//${ourUrl.hostname}:9933`)
+	code = code.replaceAll("wss://io.dexscreener.com", `ws${ourUrl.protocol.replace("http","")}//${ourUrl.hostname}:2083`)
 
 	if (code.includes(FHKey)) {
 		code = overrideData(FHKey,code);
@@ -37,7 +37,7 @@ export async function overrideJson(url: URL, json: Record<string | symbol, any>)
 			Object.entries(json).map(([k,v]) => {
 				return [
 					k,
-					v && typeof v === 'object' && 'profile' in v ? deepMerge(v,getOverridesForAddress(address)):v
+					v && typeof v === 'object' ? deepMerge(v,getOverridesForAddress(address)):v
 				]
 			})
 		)
@@ -63,28 +63,71 @@ function writeAt(input: string, index: number, insert: string) {
 	return input.slice(0, index) + insert + input.slice(index);
 }
 
+type DeepPartial<T> = {
+	[P in keyof T]?: T[P] extends Array<any>
+		? T[P]
+		: T[P] extends object
+			? DeepPartial<T[P]>
+			: T[P];
+};
 
-function deepMerge<T extends Record<string, any>, T2 extends Record<string, any>>(object1: T, object2: T2): T & T2 {
-	const result: any = { ...object1 }; // Casting to 'any' to allow dynamic property assignment
 
-	if (Array.isArray(object1) && Array.isArray(object2)) {
-		return [...object1, ...object2] as unknown as T & T2;
+export function deepMerge<T extends object>(
+	source: T,
+	replacement: DeepPartial<T>
+): T  {
+	if (!source || !replacement) {
+		return source;
 	}
 
-	Object.keys(object2).forEach((key) => {
-		if (Array.isArray(object2[key]) && Array.isArray(result[key])) {
-			const ov = object2[key];
-			let c = [...result[key]];
-			for (let i = 0; i < ov.length; i++) {
-				c[i] = ov[i];
-			}
-			result[key] = c;
-		} else if (typeof object2[key] === 'object' && object2[key] !== null && typeof result[key] === 'object') {
-			result[key] = deepMerge(result[key], object2[key]);
-		} else {
-			result[key] = object2[key];
-		}
-	});
+	// Handle non-object types
+	if (typeof source !== 'object') {
+		return source;
+	}
 
-	return result as T & T2;
+	// Create a deep clone of source to avoid mutations
+	const result = Array.isArray(source)
+		? [...source] as T
+		: { ...source };
+
+	// Iterate through source properties
+	for (const key in result) {
+		// Skip inherited properties
+		if (!Object.prototype.hasOwnProperty.call(result, key)) continue;
+
+		// Check if replacement has this property
+		if (!(key in replacement)) continue;
+
+		// Safe type assertion since we know the key exists
+		const currentValue = result[key];
+		const replacementValue = (replacement as T)[key];
+
+		// Handle arrays - replace entirely
+		if (Array.isArray(currentValue)) {
+			if (Array.isArray(replacementValue)) {
+				(result as any)[key] = [...replacementValue];
+			}
+			continue;
+		}
+
+		// Handle nested objects
+		if (
+			currentValue &&
+			typeof currentValue === 'object' &&
+			replacementValue &&
+			typeof replacementValue === 'object' &&
+			!Array.isArray(currentValue)
+		) {
+			(result as any)[key] = deepMerge(
+				currentValue,
+				replacementValue as object
+			);
+			continue;
+		}
+
+		// Replace primitive values
+		(result as any)[key] = replacementValue;
+	}
+
+	return result;
 }

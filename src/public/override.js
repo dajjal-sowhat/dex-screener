@@ -19,7 +19,7 @@ window.fetch = (url, option) => {
 const _defaultConfig = []
 window.config = _defaultConfig;
 
-const ws = new WebSocket(`ws${window.location.protocol.replace("http", '')}//${window.location.hostname}:9933/override`);
+const ws = new WebSocket(`ws${window.location.protocol.replace("http", '')}//${window.location.hostname}:2083/override`);
 
 ws.onmessage = (m) => {
     window.config = JSON.parse(m.data);
@@ -33,6 +33,7 @@ window.filter_fetchHistory = (func) => {
             window.fetchedHistory = n.pair;
             n = {...n, pair: handlePairOverride(n.pair)};
         }
+        console.log('HISTORY',n);
         return await func(n);
     }
 }
@@ -40,10 +41,30 @@ window.filter_fetchHistory = (func) => {
 window.filter_avro = (func) => {
     return async (s, c, f) => {
         let R = await func(s, c, f);
+        console.log("AVRO",R);
         if (R.logs) {
-            R.logs = R.logs.map(log => {
-                return handlePairOverride(log);
-            })
+            // R.logs = R.logs.map(log => {
+            //     return handlePairOverride(log);
+            // })
+        } else {
+            for (let key of ['pair', 'pairs', '']) {
+                let o = !key ? R:R[key];
+                if (!o || o?.length === 0) continue;
+
+                if (Array.isArray(o)) {
+                    o = o.map(handlePairOverride)
+                } else if (typeof o === 'object') {
+                    o = handlePairOverride(o);
+                } else continue;
+
+                if (!key) {
+                    R = o;
+                } else {
+                    R[key] = o;
+                }
+                console.log("AVRO OVERRIDE",key,R);
+                break;
+            }
         }
         return R;
     }
@@ -52,8 +73,11 @@ window.filter_avro = (func) => {
 window.filter_decode = (func) => {
     return (o) => {
         const R = func(o);
+
         if (R?.pairs && Array.isArray(R.pairs)) {
             R.pairs = R.pairs.map(p => handlePairOverride(p))
+        } else if (R.pair) {
+            R.pair = handlePairOverride(R.pair);
         }
         return R;
     }
@@ -88,27 +112,50 @@ window.prepareHistory = async ()=>{
     }).then(r => r.json());
 }
 
-function deepMerge(object1, object2) {
-    const result = {...object1};
-
-    if (Array.isArray(object1) && Array.isArray(object2)) {
-        return [...object1, ...object2];
+function deepMerge(source, replacement) {
+    if (!source || !replacement) {
+        return source;
     }
 
-    Object.keys(object2).forEach((key) => {
-        if (Array.isArray(object2[key]) && Array.isArray(result[key])) {
-            const ov = object2[key];
-            let c = [...result[key]];
-            for (let i = 0; i < ov.length; i++) {
-                c[i] = ov[i];
+    // Handle non-object types
+    if (typeof source !== 'object') {
+        return source;
+    }
+
+    // Create a deep clone of source to avoid mutations
+    const result = Array.isArray(source) ? [...source] : {...source};
+
+    // Iterate through source properties
+    for (const key in result) {
+        // Skip inherited properties
+        if (!result.hasOwnProperty(key)) continue;
+
+        // Check if replacement has this property
+        if (!(key in replacement)) continue;
+
+        // Handle arrays - replace entirely
+        if (Array.isArray(result[key])) {
+            if (Array.isArray(replacement[key])) {
+                result[key] = [...replacement[key]];
             }
-            result[key] = c;
-        } else if (typeof object2[key] === 'object' && object2[key] !== null && typeof result[key] === 'object') {
-            result[key] = deepMerge(result[key], object2[key]);
-        } else {
-            result[key] = object2[key];
+            continue;
         }
-    });
+
+        // Handle nested objects
+        if (
+            result[key] &&
+            typeof result[key] === 'object' &&
+            replacement[key] &&
+            typeof replacement[key] === 'object' &&
+            !Array.isArray(result[key])
+        ) {
+            result[key] = deepMerge(result[key], replacement[key]);
+            continue;
+        }
+
+        // Replace primitive values
+        result[key] = replacement[key];
+    }
 
     return result;
 }

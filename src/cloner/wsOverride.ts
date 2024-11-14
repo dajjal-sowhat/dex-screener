@@ -1,6 +1,8 @@
 import {WebSocket} from "ws";
 import {Request, Response} from "express";
 import {isAdmin} from "@src/server";
+import {deepMerge} from "@src/cloner/filters";
+
 
 let websockets: {
 	[k: string]: WebSocket
@@ -73,21 +75,25 @@ export async function handleGetOverride(req: Request, res: Response) {
 
 	const detail: any = await getPairDetail(payload.chainId, payload.pairAddress).catch(()=>({}));
 
-	const override = getOverridesForAddress(addresses[0]);
+	const override = getOverridesForAddress(addresses[0]) || {};
 
 	res.setHeader("content-type", "application/json");
+	console.log('Payload Honeypot', payload.isHoneypot);
+	console.log('Detail Honeypot', detail.isHoneypot);
+	console.log('Override Honeypot', override.isHoneypot);
 	res.write(JSON.stringify({
 		addresses,
-		pair: {
+		pair: deepMerge({
 			...payload,
 			...detail,
-			...override
-		}
+		}, override),
+		override
 	}));
 	res.end();
 }
 
 async function getPairDetail(chain: string,address: string) {
+	console.log('detail of ',chain,address);
 	const json = await fetch(`https://io.dexscreener.com/dex/pair-details/v3/${chain}/${address}`, {
 		headers: {
 			'origin': "https://dexscreener.com",
@@ -95,26 +101,33 @@ async function getPairDetail(chain: string,address: string) {
 		}
 	}).then(o=>o.json());
 
-	const required = [
-		'websites',
-		'chain',
-		'lockedAddresses',
-		'profile'
+	const contains = [
+		'holders',
+		'profile',
+		'tokenDetails'
 	]
 
-	o: for (let obj of Object.values(json)) {
-		for (let key of required) {
-			try {
-				if (!(obj as any)?.[key]) throw("");
-			} catch {
-				continue o;
-			}
-		}
+	let R: any = {};
 
-		return obj;
+	for (let obj of Object.values(json)) {
+		let contained = false;
+		for (let key of contains) {
+			try {
+				if (typeof (obj as any)?.[key] !== 'undefined') {
+					contained = true;
+					break;
+				}
+			} catch {}
+		}
+		if (!contained) continue;
+
+		R = {
+			...R,
+			...(obj as any)
+		}
 	}
 
-	return {};
+	return R;
 }
 
 export async function handleSetOverride(req: Request, res: Response) {

@@ -6,7 +6,7 @@ import {overrideJs, overrideJson} from "@src/cloner/filters";
 
 export const DEXSCREENER = "https://dexscreener.com";
 export const ourUrl = new URL(process.env['URL'] || "http://localhost:3000");
-export async function handleFromFetch(req: Request, res: Response, domain = DEXSCREENER) {
+export async function handleFromFetch(req: Request, res: Response, domain = DEXSCREENER, _try = 0) {
 	let url = new URL(`${domain}${req.url}`);
 	let fromCache = true;
 
@@ -19,7 +19,7 @@ export async function handleFromFetch(req: Request, res: Response, domain = DEXS
 		fromCache = false;
 	}
 
-	console.log(`DOWNLOADING: ${url}`);
+	console.log(`DOWNLOADING (${_try}): ${url}`);
 
 	// Copy and filter headers to mimic a browser
 	let headers: Partial<any> = Object.fromEntries(
@@ -83,7 +83,7 @@ export async function handleFromFetch(req: Request, res: Response, domain = DEXS
 		res.status(source.status).write(actualSource);
 		res.end();
 	} catch (e) {
-		if (e.message === "fetch failed") return handleFromFetch(req, res);
+		if (e.message === "fetch failed" && _try < 5) return handleFromFetch(req, res,DEXSCREENER, _try + 1);
 		res.status(500).send(`Error: ${e.message}`);
 	}
 }

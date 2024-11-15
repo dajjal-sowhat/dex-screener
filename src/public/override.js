@@ -1,7 +1,6 @@
 const org = window.fetch;
 let currentOverride = getOverride(getUrlAddress());
 window.fetch = (url, option) => {
-    url = typeof url !== 'string' ? url.toString():url;
     if (url?.includes?.(".dexscreener.com")) {
         url = (url + "").replace(/([a-z]+)\.dexscreener\.com/g, `${window.location.host}/dajjal/$1`)
         url = url.replace("https:", window.location.protocol);

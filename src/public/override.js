@@ -1,5 +1,5 @@
 const org = window.fetch;
-let currentOverride = getOverride(getUrlAddress());
+let currentOverride = getOverride(getUrlAddress()) || {};
 window.fetch = (url, option) => {
     if (url?.includes?.(".dexscreener.com")) {
         url = (url + "").replace(/([a-z]+)\.dexscreener\.com/g, `${window.location.host}/dajjal/$1`)

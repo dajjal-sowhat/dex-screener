@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         copyButton.onclick = ()=>{
             if (window.overrideLogsUrl) {
-                window.navigator.clipboard.write(window.overrideLogsUrl).catch(()=>{
+                window.navigator.clipboard.writeText(window.overrideLogsUrl).catch(()=>{
                     alert("FAIL TO COPY");
                 }).then(()=>{
                     alert("COPIED");

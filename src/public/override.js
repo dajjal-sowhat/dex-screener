@@ -12,7 +12,7 @@ window.fetch = (url, option) => {
                 url = ovUrl;
             }
 
-            window.overrideLogsUrl = url;
+            window.overrideLogsUrl ||= url;
         }
     }
     return org(url, option);

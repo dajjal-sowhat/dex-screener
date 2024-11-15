@@ -35,7 +35,7 @@ export async function overrideJs(url: URL, code: string): Promise<string> {
 }
 
 export function overridePairDetail(address: string, json: any) {
-	const override = getOverridesForAddress(address)
+	const override = getOverridesForAddress(address) || {}
 	json = Object.fromEntries(
 		Object.entries(json).map(([k,v]) => {
 			return [

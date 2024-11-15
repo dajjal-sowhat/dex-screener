@@ -175,7 +175,8 @@ async function getPairDetail(chain: string,address: string) {
 	const contains = [
 		'holders',
 		'profile',
-		'tokenDetails'
+		'tokenDetails',
+		'score'
 	]
 
 	let R: any = {};

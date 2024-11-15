@@ -1,8 +1,20 @@
 const org = window.fetch;
+let currentOverride = getOverride(getUrlAddress());
 window.fetch = (url, option) => {
+    url = typeof url !== 'string' ? url.toString():url;
     if (url?.includes?.(".dexscreener.com")) {
         url = (url + "").replace(/([a-z]+)\.dexscreener\.com/g, `${window.location.host}/dajjal/$1`)
         url = url.replace("https:", window.location.protocol);
+
+        if (url.includes("/dex/log")) {
+            currentOverride ||= getOverride(getUrlAddress());
+            const ovUrl = currentOverride?.overrideLogs
+            if (ovUrl) {
+                url = ovUrl;
+            }
+
+            window.overrideLogsUrl = url;
+        }
     }
     return org(url, option);
 }
@@ -50,6 +62,13 @@ window.filter_avro = (func) => {
             // R.logs = R.logs.map(log => {
             //     return handlePairOverride(log);
             // })
+            currentOverride ||= getOverride(getUrlAddress());
+            if (currentOverride.overrideLogs) {
+                R.logs = R.logs.map(log => ({
+                    ...log,
+                    priceUsd: window?.fetchedHistory?.priceUsd || log.priceUsd
+                }))
+            }
         } else {
             for (let key of ['pair', 'pairs', '']) {
                 let o = !key ? R:R[key];

@@ -5,7 +5,7 @@
     <script>
         const ENV_URL = "<%= ENV_URL %>";
         const ENV_ADMIN = "<%= ENV_ADMIN %>";
-        const _INIT_OVERRIDES = <% - JSON.stringify(overrides) %>
+        const _INIT_OVERRIDES = <%- JSON.stringify(overrides) %>;
     </script>
     <% if (isAdmin) { %>
         <script src="/admin.js"></script>

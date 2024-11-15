@@ -5,13 +5,14 @@ import 'express-async-errors';
 import {handleClone, handleFromFetch} from "@src/cloner/dexscreener";
 import * as process from "node:process";
 import {
+	additionalProperties,
 	CachedPairs,
 	getOverridesForAddress,
 	handleGetOverride,
 	handleSetOverride,
 	Overrides
 } from "@src/cloner/wsOverride";
-import {deepMerge} from "@src/cloner/filters";
+import {deepMerge, overridePairDetail} from "@src/cloner/filters";
 
 
 
@@ -110,9 +111,7 @@ app.get("/:platformId/:pairAddress", async (req,res)=>{
 
 	const override = getOverridesForAddress(req.params.pairAddress);
 
-	for (let key in pairDetails) {
-		pairDetails[key] =  deepMerge(pairDetails[key],override )
-	}
+	pairDetails = overridePairDetail(req.params.pairAddress, pairDetails);
 
 	const route = {
 		...req.params,

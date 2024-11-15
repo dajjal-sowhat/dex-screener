@@ -3,6 +3,7 @@ import {Request, Response} from "express";
 import {isAdmin} from "@src/server";
 import {deepMerge} from "@src/cloner/filters";
 import {getLocalStorageItem, setLocalStorageItem} from "@src/cloner/data";
+import merge from "lodash.merge";
 
 
 
@@ -73,6 +74,54 @@ export function getOverridesForAddress(address: (string | undefined) | string[],
 	return undefined;
 }
 
+
+export const additionalProperties = {
+	id: ".",
+	image: "",
+	headerImage: "",
+	eti: false,
+	profile: {
+		"header": false,
+		"website": false,
+		"twitter": false,
+		"discord": false,
+		"telegram": false,
+		"linkCount": 0,
+		imgKey: '',
+		eti: false
+	},
+	name: "",
+	description: "",
+	socials: [
+		{
+			"type": "twitter",
+			"url": "https://x.com/pepnutsolana"
+		}
+	],
+	websites: [
+		{
+			"label": "Website",
+			"url": "https://pepnutsol.com/"
+		}
+	],
+	showProfile: false,
+	overrideLogs: "",
+	reactions: {
+		"poop": {
+			"total": 0
+		},
+		"fire": {
+			"total": 0
+		},
+		"rocket": {
+			"total": 0
+		},
+		"triangular_flag_on_post": {
+			"total": 0
+		}
+	}
+}
+
 export async function handleGetOverride(req: Request, res: Response) {
 	if (!isAdmin(req)) {
 		res.redirect('/');
@@ -94,15 +143,12 @@ export async function handleGetOverride(req: Request, res: Response) {
 	const override = getOverridesForAddress(addresses[0]) || {};
 
 	res.setHeader("content-type", "application/json");
-	console.log('Payload Honeypot', payload.isHoneypot);
-	console.log('Detail Honeypot', detail.isHoneypot);
-	console.log('Override Honeypot', override.isHoneypot);
 	res.write(JSON.stringify({
 		addresses,
-		pair: deepMerge({
+		pair: deepMerge(merge(additionalProperties,{
 			...payload,
 			...detail,
-		}, override),
+		}), override),
 		override
 	}));
 	res.end();

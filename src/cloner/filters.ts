@@ -28,21 +28,39 @@ export async function overrideJs(url: URL, code: string): Promise<string> {
 
 		code = overrideData("callback:", code, code.indexOf("{intervalInMs:"))
 	}
-
+	if (code.includes("Did you know") && code.includes("getAd:")) {
+		code = code.replaceAll(`kind:"native"`, `kind:"native3"`)
+	}
 	return code;
+}
+
+export function overridePairDetail(address: string, json: any) {
+	const override = getOverridesForAddress(address)
+	json = Object.fromEntries(
+		Object.entries(json).map(([k,v]) => {
+			return [
+				k,
+				v && typeof v === 'object' ? deepMerge(v,override):v
+			]
+		})
+	)
+
+	if (override.showProfile) {
+		json.ti = override;
+	}
+
+	return json;
 }
 
 export async function overrideJson(url: URL, json: Record<string | symbol, any>): Promise<string> {
 	if (url.pathname.includes("/dex/pair-details")) {
 		const address = url.pathname.split("/").at(-1);
-		json = Object.fromEntries(
-			Object.entries(json).map(([k,v]) => {
-				return [
-					k,
-					v && typeof v === 'object' ? deepMerge(v,getOverridesForAddress(address)):v
-				]
-			})
-		)
+		json = overridePairDetail(address+"",json);
+	}
+	if (url.pathname.includes("hype/reactions")) {
+		const address = url.pathname.split(":")?.at(-1);
+		const override = getOverridesForAddress(address);
+		json.reactions = deepMerge(json.reactions,override.reactions);
 	}
 
 	return JSON.stringify(json);
@@ -114,9 +132,9 @@ export function deepMerge<T extends object>(
 
 		// Handle nested objects
 		if (
-			currentValue &&
+			typeof currentValue !== 'undefined' && currentValue !== null &&
 			typeof currentValue === 'object' &&
-			replacementValue &&
+			typeof replacementValue !== 'undefined' && replacementValue !== null &&
 			typeof replacementValue === 'object' &&
 			!Array.isArray(currentValue)
 		) {

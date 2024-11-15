@@ -31,12 +31,24 @@ const JsonEditor: React.FC<JsonEditorProps> = ({initialData = {}, onChange, chan
 	const setValueByPath = (obj: any, path: string, value: any): any => {
 		const parts = path.split('.');
 		const key = parts[0];
-
 		if (parts.length === 1) {
-			return { ...obj, [key]: value };
+			if (Array.isArray(obj)) {
+				let c = [...obj];
+				c[+key] = value;
+				return c;
+			} else return { ...obj, [key]: value };
 		}
 
-		return {
+		if (Array.isArray(obj) || !isNaN(+key)) {
+			if (!Array.isArray(obj)) obj = [];
+			let c = [...obj];
+			c[+key] = setValueByPath(
+				obj[+key] || {},
+				parts.slice(1).join('.'),
+				value
+			);
+			return c;
+		} else return {
 			...obj,
 			[key]: setValueByPath(
 				obj[key] || {},
@@ -68,6 +80,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({initialData = {}, onChange, chan
 
 		if (JSON.stringify(originalValue) !== JSON.stringify(value)) {
 			// Value is different from initial - track the change
+			console.log("CHANGES",path,value);
 			setChanges(prev => {
 				const newChanges = setValueByPath(prev, path, value);
 				onChange?.(newChanges);

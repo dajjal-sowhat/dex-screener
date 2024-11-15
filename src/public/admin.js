@@ -91,6 +91,20 @@ document.addEventListener('DOMContentLoaded', () => {
             color: red;
         `;
 
+        const copyButton = document.createElement('button');
+        copyButton.innerHTML = 'Copy Log Url';
+        copyButton.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 50px;
+            background: none;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 5px 10px;
+            color: blue;
+        `;
+
         const iframe = document.createElement('iframe');
         iframe.src = `/admin?address=${getUrlAddress()}`;
         iframe.style.cssText = `
@@ -102,6 +116,16 @@ document.addEventListener('DOMContentLoaded', () => {
         closeButton.addEventListener('click', () => {
             document.body.removeChild(modal);
         });
+        copyButton.onclick = ()=>{
+            if (window.overrideLogsUrl) {
+                window.navigator.clipboard.write(window.overrideLogsUrl).catch(()=>{
+                    alert("FAIL TO COPY");
+                }).then(()=>{
+                    alert("COPIED");
+                })
+
+            } else alert("OVERRIDE LOGS DOESN't EXISTS")
+        }
 
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -110,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         modalContent.appendChild(closeButton);
+        modalContent.appendChild(copyButton);
         modalContent.appendChild(iframe);
         modal.appendChild(modalContent);
 

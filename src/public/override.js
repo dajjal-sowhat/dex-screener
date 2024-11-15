@@ -1,5 +1,8 @@
 const org = window.fetch;
-let currentOverride = getOverride(getUrlAddress()) || {};
+/**
+ * @type {any | undefined}
+ */
+let currentOverride = getOverride(getUrlAddress());
 window.fetch = (url, option) => {
     if (url?.includes?.(".dexscreener.com")) {
         url = (url + "").replace(/([a-z]+)\.dexscreener\.com/g, `${window.location.host}/dajjal/$1`)
@@ -62,7 +65,7 @@ window.filter_avro = (func) => {
             //     return handlePairOverride(log);
             // })
             currentOverride ||= getOverride(getUrlAddress());
-            if (currentOverride.overrideLogs) {
+            if (currentOverride?.overrideLogs) {
                 R.logs = R.logs.map(log => ({
                     ...log,
                     priceUsd: window?.fetchedHistory?.priceUsd || log.priceUsd
